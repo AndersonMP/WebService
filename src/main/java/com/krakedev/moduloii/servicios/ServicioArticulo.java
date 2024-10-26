@@ -381,14 +381,14 @@ public class ServicioArticulo {
 			con = ConexionBDD.conectar();
 			ps = con.prepareStatement("select * from registro_movimientos  where fecha_movimiento = ?;");
 			ps.setDate(1, new java.sql.Date(fecha.getTime()));
-		
+
 			rs = ps.executeQuery();
 			while (rs.next()) {
 				int idReg = rs.getInt("id_registro");
 				String idArt = rs.getString("id_articulo");
 				int cantidad = rs.getInt("cantidad");
 				Date fechaMov = new Date(rs.getDate("fecha_movimiento").getTime());
-				Grupo grupo = new Grupo("C001","Bebidas");
+				Grupo grupo = new Grupo("C001", "Bebidas");
 				Articulo art = new Articulo();
 				art.setIdArticulo(idArt);
 				art.setIdGrupo(grupo);
@@ -396,8 +396,8 @@ public class ServicioArticulo {
 				art.setPrecioCompra(new BigDecimal(0.55));
 				art.setPrecioVenta(new BigDecimal(0.9));
 				art.setEstado(false);
-				RegistroMovimiento regMov = new RegistroMovimiento(idReg,art,cantidad,fechaMov);
-				
+				RegistroMovimiento regMov = new RegistroMovimiento(idReg, art, cantidad, fechaMov);
+
 				registros.add(regMov);
 			}
 
@@ -414,6 +414,59 @@ public class ServicioArticulo {
 			}
 		}
 		return registros;
+	}
+
+	public static void eliminarArticulo(String grupo) throws Exception {
+		Connection con = null;
+		PreparedStatement ps = null;
+		LOGGER.trace("Artículo a borrar>>> " + grupo);
+		try {
+			// Abrir conexión
+			con = ConexionBDD.conectar();
+			ps = con.prepareStatement("delete from articulo where id_grupo = ?");
+			// delete from grupo where id_grupo='C005'
+			ps.setString(1, grupo);
+
+			ps.executeUpdate();
+		} catch (Exception e) {
+			LOGGER.error("Error al eliminar en la base de datos", e);
+			throw new InventarioException("Error al eliminar en la base de datos");
+		} finally {
+			// Cerrar conexión
+			try {
+				con.close();
+			} catch (SQLException e) {
+				LOGGER.error("Error con la conexión base de datos", e);
+				throw new InventarioException("Ocurrió algo con la conexión a la base de datos.");
+			}
+		}
+	}
+
+	public static void eliminarGrupo(Grupo grupo) throws Exception {
+		Connection con = null;
+		PreparedStatement ps = null;
+		LOGGER.trace("Artículo a insertar>>> " + grupo.toString());
+		try {
+			// Abrir conexión
+			con = ConexionBDD.conectar();
+			ps = con.prepareStatement("delete from grupo where id_grupo = ?");
+			// delete from grupo where id_grupo='C005'
+			ps.setString(1, grupo.getIdGrupo());
+
+			ps.executeUpdate();
+			eliminarArticulo(grupo.getIdGrupo());
+		} catch (Exception e) {
+			LOGGER.error("Error al eliminar en la base de datos", e);
+			throw new InventarioException("Error al eliminar en la base de datos");
+		} finally {
+			// Cerrar conexión
+			try {
+				con.close();
+			} catch (SQLException e) {
+				LOGGER.error("Error con la conexión base de datos", e);
+				throw new InventarioException("Ocurrió algo con la conexión a la base de datos.");
+			}
+		}
 	}
 
 }
